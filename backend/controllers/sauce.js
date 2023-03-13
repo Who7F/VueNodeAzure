@@ -1,15 +1,14 @@
-const Sauce = require('../models/sauce');
+//const Sauce = require('../models/sauce');
 const fs = require('fs');
 const connection = require('../connection')
 
-
+//Used for testing
 exports.cheatSauce =(req, res, next) =>{
 	res.status(201).json({
 			message: req.body.sauce
 
 		});
 };
-
 
 exports.createSauce = (req, res, next) => {
 	const url = req.protocol + '://' + req.get('host');
@@ -30,14 +29,11 @@ exports.createSauce = (req, res, next) => {
 		request.addParameter('content', TYPES.NVarChar,newSauce.content);
 		request.addParameter('upload', TYPES.NVarChar,req.file.filename);
 		
-	
 	connection.execSql(request);
-	
 	
 	res.status(201).json({
 		message: 'Post saved'
-	});
-	
+	});	
 };
 
 exports.getOneSauce = (req, res, next) => {
@@ -103,15 +99,13 @@ exports.getAllSauce = (req, res, next) => {
 				let columnName = i.metadata.colName; 
 				theRow[columnName] = i.value;
 			});
+			//Build url address 
 			theRow['url'] = 'http://' + req.get('host') + '/images/' + theRow['upload'];
-			
 			sauce.push(theRow);
 			
 		});
 		res.status(200).json(sauce);
 	});
-	
-	
 };
 
 exports.readSauce = (req, res, next) => {
@@ -140,55 +134,50 @@ exports.readSauce = (req, res, next) => {
 	});
 }
 
-exports.modifySauce = (req, res, next) => {
-	let sauce = new Sauce({_id: req.params._id})
-	if (req.file){
-		const url = req.protocol + '://' + req.get('host');
-		const newSauce = JSON.parse(req.body.sauce);
-		sauce = ({
-			_id: req.params.id,
-			userId: newSauce.userId,
-			name: newSauce.name,
-			description: newSauce.description,
-			manufacturer: newSauce.manufacturer,
-			mainPepper: newSauce.mainPepper,
-			imageUrl: url + '/images/' + req.file.filename,
-			heat: newSauce.heat,
-		});
-		/**
-		Error was in the below
-		unlink returns a promise so unlinkSync is used
-		**/
+//exports.modifySauce = (req, res, next) => {
+//	let sauce = new Sauce({_id: req.params._id})
+//	if (req.file){
+//		const url = req.protocol + '://' + req.get('host');
+//		const newSauce = JSON.parse(req.body.sauce);
+//		sauce = ({
+//			_id: req.params.id,
+//			userId: newSauce.userId,
+//			name: newSauce.name,
+//			description: newSauce.description,
+//			manufacturer: newSauce.manufacturer,
+//			mainPepper: newSauce.mainPepper,
+//			imageUrl: url + '/images/' + req.file.filename,
+//			heat: newSauce.heat,
+//		});
+		
 		//fs.unlink ('images/' + newSauce.imageUrl);
-		Sauce.findOne({_id: req.params.id}).then((oldSauce) => {
-			const filename = oldSauce.imageUrl.split('/images/')[1];
-			//fs.unlink('images/' + filename, () => {
-			//	console.log('images/' + filename);
-			//});
-			fs.unlinkSync('images/' + filename);
-		});
-	} else{
-		const newSauce = req.body;
-		sauce = ({
-			_id: req.params.id,
-			userId: newSauce.userId,
-			name: newSauce.name,
-			description: newSauce.description,
-			manufacturer: newSauce.manufacturer,
-			mainPepper: newSauce.mainPepper,
-			heat: newSauce.heat,
-		});
-	}
-	Sauce.updateOne({_id: req.params.id}, sauce).then(()=> {
-		res.status(201).json({
-			message: 'Sauce updated'
-		});
-	}).catch((error) => {
-		res.status(400).json({
-			error: error
-		});
-	});
-};
+//		Sauce.findOne({_id: req.params.id}).then((oldSauce) => {
+//			const filename = oldSauce.imageUrl.split('/images/')[1];
+			
+//			fs.unlinkSync('images/' + filename);
+//		});
+//	} else{
+//		const newSauce = req.body;
+//		sauce = ({
+//			_id: req.params.id,
+//			userId: newSauce.userId,
+//			name: newSauce.name,
+//			description: newSauce.description,
+//			manufacturer: newSauce.manufacturer,
+//			mainPepper: newSauce.mainPepper,
+//			heat: newSauce.heat,
+//		});
+//	}
+//	Sauce.updateOne({_id: req.params.id}, sauce).then(()=> {
+//		res.status(201).json({
+//			message: 'Sauce updated'
+//		});
+//	}).catch((error) => {
+//		res.status(400).json({
+//			error: error
+//		});
+//	});
+//};
 
 exports.deleteSauce = (req, res, next) =>{
 	
@@ -235,44 +224,44 @@ exports.deleteSauce = (req, res, next) =>{
 //https://www.mongodb.com/docs/manual/reference/operator/update/inc/
 //https://www.mongodb.com/docs/manual/reference/operator/update/push/
 //https://www.mongodb.com/docs/manual/reference/operator/update/pull/
-exports.likeSauce = (req, res, next) => {
-	Sauce.findOne({_id: req.params.id}).then((sauce) => {
-		if (req.body.like === 1){
-			sauce.usersLiked.push(req.body.userId);
-			likeSauce = ({
-				likes: ++sauce.likes,
-				usersLiked: sauce.usersLiked,
-			});
-		} else if(req.body.like === -1) {
-			likeSauce = ({
-				$push: { usersDisliked: req.body.userId },
-				$inc: { dislikes: +1 },
-			});
-		} else if (req.body.like === -0 && sauce.usersLiked.includes(req.body.userId)){
-			likeSauce = ({
-				$pull: { usersLiked: req.body.userId },
-				$inc: { likes: -1 },
-			});
-		} else if (req.body.like === -0 && sauce.usersDisliked.includes(req.body.userId)){
-			likeSauce = ({
-				$pull: { usersDisliked: req.body.userId },
-				$inc: { dislikes: -1 },
-			});
-		} else {
-			console.log('Likes are being hacked!  Sweet');
-			res.status(201).json({
-				message: 'opps'
-			});
-		}
-		Sauce.updateOne({_id: req.params.id}, likeSauce).then(()=> {
-		
-			res.status(201).json({
-				message: 'Sauce updated'
-			});
-		}).catch((error) => {
-			res.status(400).json({
-				error: error
-			});
-		});
-	});
-};
+//exports.likeSauce = (req, res, next) => {
+//	Sauce.findOne({_id: req.params.id}).then((sauce) => {
+//		if (req.body.like === 1){
+//			sauce.usersLiked.push(req.body.userId);
+//			likeSauce = ({
+//				likes: ++sauce.likes,
+//				usersLiked: sauce.usersLiked,
+//			});
+//		} else if(req.body.like === -1) {
+//			likeSauce = ({
+//				$push: { usersDisliked: req.body.userId },
+//				$inc: { dislikes: +1 },
+//			});
+//		} else if (req.body.like === -0 && sauce.usersLiked.includes(req.body.userId)){
+//			likeSauce = ({
+//				$pull: { usersLiked: req.body.userId },
+//				$inc: { likes: -1 },
+//			});
+//		} else if (req.body.like === -0 && sauce.usersDisliked.includes(req.body.userId)){
+//			likeSauce = ({
+//				$pull: { usersDisliked: req.body.userId },
+//				$inc: { dislikes: -1 },
+//			});
+//		} else {
+//			console.log('Likes are being hacked!  Sweet');
+//			res.status(201).json({
+//				message: 'opps'
+//			});
+//		}
+//		Sauce.updateOne({_id: req.params.id}, likeSauce).then(()=> {
+//		
+//			res.status(201).json({
+//				message: 'Sauce updated'
+//			});
+//		}).catch((error) => {
+//			res.status(400).json({
+//				error: error
+//			});
+//		});
+//	});
+//};

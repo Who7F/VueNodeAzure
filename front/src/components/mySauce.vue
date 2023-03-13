@@ -50,7 +50,7 @@ export default {
 		}
 	},
 	async read(payload, page){
-		console.log('what the')
+		console.log(payload)
 		const responce = await axios.post('/api/sauces/read', payload)
 		console.log(responce)
 		this.$router.push({ name: 'OneSouce', params: { id: page }})

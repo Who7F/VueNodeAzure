@@ -1,20 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Home from '../views/myHome.vue'
-import About from '../views/myAbout.vue'
 
-const Bar = { template: '<div>This is Bar {{ $route.params.id }}</div>' }
 
 const routes = [
 	{
 		path: '/',
 		name: 'Home',
 		component: Home
-	},
-	{
-		path: '/about',
-		name: 'About',
-		component: About
 	},
 	{
 		path: '/signup',
@@ -47,16 +40,8 @@ const routes = [
 		name: 'Posts',
 		component: ()=> import (/*webpachChunkName: "Create Post"*/'../views/thePosts.vue')	
 	},
-	{ 	
-		path: '/bar/:id', 
-		name: 'bar', 
-		component: Bar
-	},
-	{
-		path: '/test',
-		name: 'Test',
-		component: ()=> import (/*webpachChunkName: "Create Post"*/'../views/theTest.vue')
-	}
+
+
 ]
 
 const router = createRouter({

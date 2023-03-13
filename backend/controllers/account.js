@@ -1,4 +1,3 @@
-const Account = require('../models/user');
 const fs = require('fs');
 const connection = require('../connection')
 
